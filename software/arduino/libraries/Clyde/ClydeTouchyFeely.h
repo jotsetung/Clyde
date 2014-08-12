@@ -51,6 +51,7 @@ class CClydeTouchyFeely : public CClydeModule {
   bool m_colorSelectEnabled; /**< color selection enabled flag */
   uint8_t m_tickleCount;     /**< number of detected tickle touch events */
   uint32_t m_firstTickle;    /**< time in millis we detected the first tickle tap */
+  uint32_t m_lastTickle;    /**< time in millis we detected the last tickle tap */
   uint8_t m_lastStopStep;    /**< step index when the color select cycle was stopped. */
   uint16_t m_touchStatus;    /**< current status of touch electrodes. */
   uint32_t m_touchStart;     /**< time in millis when the active touch started. */

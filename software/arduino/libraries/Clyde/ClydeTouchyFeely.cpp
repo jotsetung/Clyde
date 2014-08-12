@@ -131,32 +131,47 @@ void CClydeTouchyFeely::update(uint8_t apin, uint8_t dpin) {
 
 // we just check how long it was since last tickle, and if longer than a certain time period
 // we perform an action based on the number of clicks.
-void CClydeTouchFeely::checkClickEvent() {
+void CClydeTouchyFeely::checkClickEvent() {
   // we want to determine the number of touches/tickles within a certain time period and
   // call a different action based on that.
-  if ( millis() - m_lastTickle > CLICK_TRIGGER_TIME && m_tickleCount > 0 ){
-    m_tickleCount = 0;
+  if ( (millis() - m_lastTickle) > CLICK_TRIGGER_TIME && m_tickleCount > 0 ){
     // evaluate tickle count.
     if( m_tickleCount == 1 ){
+#ifdef CLYDE_DEBUG
+      Serial.println("Clyde: checkClickEvent: detected one tab.");
+#endif
       Clyde.fadeAmbient( RGB( 255, 0, 0 ), 500 );
     }else if( m_tickleCount == 2 ){
+#ifdef CLYDE_DEBUG
+      Serial.println("Clyde: checkClickEvent: detected two tabs.");
+#endif
       Clyde.fadeAmbient( RGB( 0, 255, 0 ), 500 );
     }else{
+#ifdef CLYDE_DEBUG
+      Serial.print("Clyde: checkClickEvent: got not in total ");
+      Serial.print( m_tickleCount );
+      Serial.println( "tab(s)" );
+#endif
       laugh();
     }
+    m_tickleCount = 0;
   }
 }
 
 // that's just a simple function to increase the tickle count and keeping track
 // of the time of the tickle
-void CClydeTouchFeely::tickle() {
+void CClydeTouchyFeely::tickle() {
   //touch detected, increase the tickle count
   m_tickleCount++;
+#ifdef CLYDE_DEBUG
+  Serial.print("Clyde: calling tickle. Got now ");
+  Serial.print(m_tickleCount);
+  Serial.println( " tab(s)." );
+#endif
   if (m_tickleCount == 1) {
-    m_firstTickle = millis(); //keep track of the first tickle
-  }else{
-    m_lastTickle = millis();  //keep track of the last tickle
+    m_firstTickle = millis(); //keep track of the first tickle... do not really need that yet.
   }
+  m_lastTickle = millis();  //keep track of the last tickle
 }
     
 void CClydeTouchyFeely::tickleCheck() {
