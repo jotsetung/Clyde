@@ -106,7 +106,7 @@ private:
   void tickle();
 
   /** Evaluate tickles and start an action based on that*/
-  void checkClickEvent();
+  void evaluateClickEvent();
   
   /** Start laugh cycle. */
   //TODO this should be in the main class

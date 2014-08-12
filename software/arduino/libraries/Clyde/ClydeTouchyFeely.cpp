@@ -111,18 +111,21 @@ void CClydeTouchyFeely::update(uint8_t apin, uint8_t dpin) {
     Serial.print("Clyde: Touchy-Feely detected a release. Touch lasted: ");
     Serial.println(millis() - m_touchStart);
     #endif
-    
+
+    if( ( millis() - m_touchStart ) < 500 ){
+      // it's not a touch but a tickle or tab.
+      tickle();
+    }
+
     if (!Clyde.cycle()->is(LAUGH))
       stopColorSelect();
     
-    if (!Clyde.white()->isOn())
-      tickle();
+    //if (!Clyde.white()->isOn())
       //tickleCheck();
   }
-
   // so if there is no touch, we check how long time ago we had a "tickle", and if
   // that is longer than xxx we do some action based on the number of tickles/clicks we had.
-  checkClickEvent();
+  evaluateClickEvent();
 
   //call released handler if it is set and no legs are touched
   if (m_releasedHandler && !(m_touchStatus & 0x0FFF))
@@ -131,30 +134,41 @@ void CClydeTouchyFeely::update(uint8_t apin, uint8_t dpin) {
 
 // we just check how long it was since last tickle, and if longer than a certain time period
 // we perform an action based on the number of clicks.
-void CClydeTouchyFeely::checkClickEvent() {
+void CClydeTouchyFeely::evaluateClickEvent() {
   // we want to determine the number of touches/tickles within a certain time period and
   // call a different action based on that.
-  if ( (millis() - m_lastTickle) > CLICK_TRIGGER_TIME && m_tickleCount > 0 ){
-    // evaluate tickle count.
-    if( m_tickleCount == 1 ){
+  // if the last tickle was more than xx ms ago
 #ifdef CLYDE_DEBUG
-      Serial.println("Clyde: checkClickEvent: detected one tab.");
+      Serial.print("Clyde: evaluateClickEvent: last tickle was: ");
+      //      Serial.print( millis() - m_firstTickle );
+      //Serial.println( " ms ago." );
 #endif
-      Clyde.fadeAmbient( RGB( 255, 0, 0 ), 500 );
-    }else if( m_tickleCount == 2 ){
+  if( (millis() - m_firstTickle) > CLICK_TRIGGER_TIME ){
+    // and we have some tickles at all...
+    if ( m_tickleCount > 0 ){
 #ifdef CLYDE_DEBUG
-      Serial.println("Clyde: checkClickEvent: detected two tabs.");
-#endif
-      Clyde.fadeAmbient( RGB( 0, 255, 0 ), 500 );
-    }else{
-#ifdef CLYDE_DEBUG
-      Serial.print("Clyde: checkClickEvent: got not in total ");
+      Serial.print("Clyde: evaluateClickEvent: got not in total ");
       Serial.print( m_tickleCount );
       Serial.println( "tab(s)" );
 #endif
-      laugh();
+      // evaluate tickle count.
+      if( m_tickleCount == 1 ){
+	Clyde.setAmbient(RGB(255, 0, 0)); 
+	Clyde.updateAmbientLight();
+	//Clyde.fadeAmbient( RGB( 255, 0, 0 ), 500 );
+      }else if( m_tickleCount == 2 ){
+	Clyde.setAmbient(RGB(0, 255, 0)); 
+	Clyde.updateAmbientLight();
+	//Clyde.fadeAmbient( RGB( 0, 255, 0 ), 500 );
+      }else if( m_tickleCount == 3 ){
+	Clyde.setAmbient(RGB(0, 0, 255)); 
+	Clyde.updateAmbientLight();
+	//Clyde.fadeAmbient( RGB( 0, 0, 255 ), 500 );
+      }else{
+	laugh();
+      }
+      m_tickleCount = 0;
     }
-    m_tickleCount = 0;
   }
 }
 
@@ -168,10 +182,10 @@ void CClydeTouchyFeely::tickle() {
   Serial.print(m_tickleCount);
   Serial.println( " tab(s)." );
 #endif
-  if (m_tickleCount == 1) {
-    m_firstTickle = millis(); //keep track of the first tickle... do not really need that yet.
-  }
-  m_lastTickle = millis();  //keep track of the last tickle
+  //if (m_tickleCount == 1) {
+  m_firstTickle = millis(); //keep track of the first tickle... do not really need that yet.
+  //}
+  //m_lastTickle = millis();  //keep track of the last tickle
 }
     
 void CClydeTouchyFeely::tickleCheck() {
