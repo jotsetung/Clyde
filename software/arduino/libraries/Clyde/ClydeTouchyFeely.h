@@ -40,6 +40,8 @@ class CClydeTouchyFeely : public CClydeModule {
 
   static const uint32_t TICKLE_INTERVAL = 2500;   /**< max time in millis between touch events to trigger laugh */
   static const uint8_t TICKLE_REPEAT = 4;         /**< number of consecutive touch events to trigger laugh */
+
+  static const uint32_t CLICK_TRIGGER_TIME = 1000;   /** time after last tickle/click we start triggering a click event */
   
   static const RGB SELECT_COLORS[];               /**< colors of the color select cycle */
   static const uint16_t SELECT_INTERVALS[];       /**< intervals of the color select cycle */
@@ -98,6 +100,12 @@ public:
 private:
   /** Check if the detected touch is tickling. */
   void tickleCheck();
+
+  /** Keep track of tickles */
+  void tickle();
+
+  /** Evaluate tickles and start an action based on that*/
+  void checkClickEvent();
   
   /** Start laugh cycle. */
   //TODO this should be in the main class

@@ -35,6 +35,7 @@ CClydeTouchyFeely::CClydeTouchyFeely()
   m_colorSelectEnabled = true;
   m_tickleCount = 0;
   m_firstTickle = 0;
+  m_lastTickle = 0; // need that to trigger click event.
   m_lastAmbientOn = false;
   m_lastWhiteOn = false;
 }
@@ -72,7 +73,7 @@ void CClydeTouchyFeely::update(uint8_t apin, uint8_t dpin) {
   
   //only active when the ambient light is on
   if (!Clyde.ambient()->isOn()/* || Clyde.white()->isOn()*/) return;
-
+  
   //trigger touch event after a few millis to protect from false positive
   if ((m_touchStatus & 0x0FFF) && (millis()-m_touchStart > 250)) {
     #ifdef CLYDE_DEBUG
@@ -115,14 +116,49 @@ void CClydeTouchyFeely::update(uint8_t apin, uint8_t dpin) {
       stopColorSelect();
     
     if (!Clyde.white()->isOn())
-      tickleCheck();
+      tickle();
+      //tickleCheck();
   }
-  
+
+  // so if there is no touch, we check how long time ago we had a "tickle", and if
+  // that is longer than xxx we do some action based on the number of tickles/clicks we had.
+  checkClickEvent();
+
   //call released handler if it is set and no legs are touched
   if (m_releasedHandler && !(m_touchStatus & 0x0FFF))
     m_releasedHandler();
 }
 
+// we just check how long it was since last tickle, and if longer than a certain time period
+// we perform an action based on the number of clicks.
+void CClydeTouchFeely::checkClickEvent() {
+  // we want to determine the number of touches/tickles within a certain time period and
+  // call a different action based on that.
+  if ( millis() - m_lastTickle > CLICK_TRIGGER_TIME && m_tickleCount > 0 ){
+    m_tickleCount = 0;
+    // evaluate tickle count.
+    if( m_tickleCount == 1 ){
+      Clyde.fadeAmbient( RGB( 255, 0, 0 ), 500 );
+    }else if( m_tickleCount == 2 ){
+      Clyde.fadeAmbient( RGB( 0, 255, 0 ), 500 );
+    }else{
+      laugh();
+    }
+  }
+}
+
+// that's just a simple function to increase the tickle count and keeping track
+// of the time of the tickle
+void CClydeTouchFeely::tickle() {
+  //touch detected, increase the tickle count
+  m_tickleCount++;
+  if (m_tickleCount == 1) {
+    m_firstTickle = millis(); //keep track of the first tickle
+  }else{
+    m_lastTickle = millis();  //keep track of the last tickle
+  }
+}
+    
 void CClydeTouchyFeely::tickleCheck() {
   //touch detected, increase the tickle count
   m_tickleCount++;

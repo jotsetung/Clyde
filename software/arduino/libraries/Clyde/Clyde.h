@@ -39,9 +39,9 @@ enum ECycleType {
 	OFF,
 	BLINK,
 	SUNSET,
-  SELECT,
-  LAUGH,
-  UNKNOWN
+	SELECT,
+	LAUGH,
+	UNKNOWN
 };
 
 /**

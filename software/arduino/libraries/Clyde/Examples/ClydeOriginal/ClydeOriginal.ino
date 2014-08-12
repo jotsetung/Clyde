@@ -20,8 +20,9 @@ void setup() {
   sCmd.addCommand("SET_WHITE", cmdSetWhite);
   sCmd.addCommand("WRITE_EEPROM", cmdWriteEEPROM);
   sCmd.addCommand("READ_EEPROM", cmdReadEEPROM);
-  
-  //Clyde.eeprom()->reset();
+
+  // resetting the eeprom in order to write any changes to the default colors
+  Clyde.eeprom()->reset();
   Clyde.begin();
 }
 
