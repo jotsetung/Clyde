@@ -38,6 +38,7 @@ CClydeTouchyFeely::CClydeTouchyFeely()
   m_lastTickle = 0; // need that to trigger click event.
   m_lastAmbientOn = false;
   m_lastWhiteOn = false;
+  m_still_touching = false;
 }
 
 bool CClydeTouchyFeely::init(uint8_t apin, uint8_t dpin) {
@@ -60,6 +61,7 @@ bool CClydeTouchyFeely::init(uint8_t apin, uint8_t dpin) {
   return true;
 }
 
+// check the status of the sensor and, if touch detected, record start time.
 void CClydeTouchyFeely::update(uint8_t apin, uint8_t dpin) {
   //reset the MPR121 when light status changes
   if (Clyde.ambient()->isOn() != m_lastAmbientOn || Clyde.white()->isOn() != m_lastWhiteOn) {
@@ -70,61 +72,64 @@ void CClydeTouchyFeely::update(uint8_t apin, uint8_t dpin) {
     m_lastAmbientOn = Clyde.ambient()->isOn();
     m_lastWhiteOn = Clyde.white()->isOn();
   }
-  
+
   //only active when the ambient light is on
   if (!Clyde.ambient()->isOn()/* || Clyde.white()->isOn()*/) return;
+
+  //check for mpr121 interrupt
+  if (digitalRead(dpin)) return;
   
-  //trigger touch event after a few millis to protect from false positive
-  if ((m_touchStatus & 0x0FFF) && (millis()-m_touchStart > 250)) {
+  //read the touch state from the MPR121
+  m_touchStatus = m_mpr121.getTouchStatus();
+  
+  //keep track of when touch started
+  if( m_touchStatus & 0x0FFF) {
+    // only record the touch start if it is a new touch
+    if( !m_still_touching ){
+#ifdef CLYDE_DEBUG
+      Serial.println( "Clyde: Touchy-Feely detected a new touch." )
+#endif
+      // only call this once for a touch.
+      m_touchStart = millis();
+      m_still_touching = true;
+    }
+  }
+  else {
+    m_still_touching = false;
+    // release
+#ifdef CLYDE_DEBUG
+    Serial.print("Clyde: Touchy-Feely detected a release. Touch lasted: ");
+    Serial.println(millis() - m_touchStart);
+#endif
+    if( ( millis() - m_touchStart ) < 500 ){
+      // it's not a touch but a tickle or tab.
+      m_tickleCount++;
+      if( m_tickleCount==1 ){
+	m_firstTickle = millis();
+      }
+      m_lastTickle = millis();
+    }
+    // stop color select, if we started the color select.
+    if (Clyde.cycle()->is(SELECT))
+      stopColorSelect();
+  }
+  
+  //trigger touch event (color select) after a few millis to protect from false positive
+  //so, trigger, if still touching, touch lasts longer than 250ms and if tickleCount is 0.
+  if ((m_touchStatus & 0x0FFF) && (millis()-m_touchStart > 250) && m_tickleCount==0) {
     #ifdef CLYDE_DEBUG
     Serial.println("Clyde: Touchy-Feely triggered touch event.");
     #endif
       
     //start color selection only if current cycle isn't laugh or select
-    if (!Clyde.cycle()->is(SELECT) && !Clyde.cycle()->is(LAUGH))
+    if (!Clyde.cycle()->is(SELECT) && !Clyde.cycle()->is(LAUGH)){
       startColorSelect();
-    
-    //call touched handler if any
-    if (m_touchedHandler) m_touchedHandler();
-    
-    //reset status to only call this once
-    m_touchStatus = 0x1000;
-  }
-
-  //check for mpr121 interrupt
-  if (digitalRead(dpin))
-    return;
-  
-  //read the touch state from the MPR121
-  m_touchStatus = m_mpr121.getTouchStatus();
-
-  //keep track of when touch started
-  if (m_touchStatus & 0x0FFF) {
-    #ifdef CLYDE_DEBUG
-    Serial.println("Clyde: Touchy-Feely detected a touch.");
-    #endif
-    
-    m_touchStart = millis();
-  }
-  else {
-    #ifdef CLYDE_DEBUG
-    Serial.print("Clyde: Touchy-Feely detected a release. Touch lasted: ");
-    Serial.println(millis() - m_touchStart);
-    #endif
-
-    if( ( millis() - m_touchStart ) < 500 ){
-      // it's not a touch but a tickle or tab.
-      tickle();
+      //call touched handler if any
+      if (m_touchedHandler) m_touchedHandler();
     }
-
-    if (!Clyde.cycle()->is(LAUGH))
-      stopColorSelect();
-    
-    //if (!Clyde.white()->isOn())
-      //tickleCheck();
   }
-  // so if there is no touch, we check how long time ago we had a "tickle", and if
-  // that is longer than xxx we do some action based on the number of tickles/clicks we had.
+
+  // evaluate whether we have had some clicks.
   evaluateClickEvent();
 
   //call released handler if it is set and no legs are touched
@@ -135,15 +140,8 @@ void CClydeTouchyFeely::update(uint8_t apin, uint8_t dpin) {
 // we just check how long it was since last tickle, and if longer than a certain time period
 // we perform an action based on the number of clicks.
 void CClydeTouchyFeely::evaluateClickEvent() {
-  // we want to determine the number of touches/tickles within a certain time period and
-  // call a different action based on that.
   // if the last tickle was more than xx ms ago
-#ifdef CLYDE_DEBUG
-      Serial.print("Clyde: evaluateClickEvent: last tickle was: ");
-      //      Serial.print( millis() - m_firstTickle );
-      //Serial.println( " ms ago." );
-#endif
-  if( (millis() - m_firstTickle) > CLICK_TRIGGER_TIME ){
+  if( (millis() - m_lastTickle ) > CLICK_TRIGGER_TIME ){
     // and we have some tickles at all...
     if ( m_tickleCount > 0 ){
 #ifdef CLYDE_DEBUG

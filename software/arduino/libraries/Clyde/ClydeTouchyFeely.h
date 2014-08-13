@@ -57,6 +57,7 @@ class CClydeTouchyFeely : public CClydeModule {
   uint32_t m_touchStart;     /**< time in millis when the active touch started. */
   bool m_lastAmbientOn;      /**< status of the ambient light on last update. */
   bool m_lastWhiteOn;        /**< status of the white light on last update. */
+  bool m_still_touching;       /**< status of the touch to distinguish touch from tickle/tab*/
   
   RGB m_laughColors[CClyde::CAmbientCycle::MAX_CYCLE_LENGTH];           /**< colors of the laugh cycle */   //this could be in the main class
   uint16_t m_laughIntervals[CClyde::CAmbientCycle::MAX_CYCLE_LENGTH];   /**< intervals of the laugh cycle */
