@@ -87,7 +87,7 @@ void CClydeTouchyFeely::update(uint8_t apin, uint8_t dpin) {
     // only record the touch start if it is a new touch
     if( !m_still_touching ){
 #ifdef CLYDE_DEBUG
-      Serial.println( "Clyde: Touchy-Feely detected a new touch." )
+      Serial.println( "Clyde: Touchy-Feely detected a new touch." );
 #endif
       // only call this once for a touch.
       m_touchStart = millis();
@@ -95,6 +95,12 @@ void CClydeTouchyFeely::update(uint8_t apin, uint8_t dpin) {
     }
   }
   else {
+    if( !m_still_touching ){
+      // well, there hasn't been any touch before, so no need to evaluate
+      // any further..
+      return;
+    }
+    // no touch anymore
     m_still_touching = false;
     // release
 #ifdef CLYDE_DEBUG
@@ -115,12 +121,15 @@ void CClydeTouchyFeely::update(uint8_t apin, uint8_t dpin) {
   }
   
   //trigger touch event (color select) after a few millis to protect from false positive
-  //so, trigger, if still touching, touch lasts longer than 250ms and if tickleCount is 0.
-  if ((m_touchStatus & 0x0FFF) && (millis()-m_touchStart > 250) && m_tickleCount==0) {
+  //so, trigger, if still touching, touch lasts longer than 250ms
+  //  if ((m_touchStatus & 0x0FFF) && (millis()-m_touchStart > 250)) {
+  if ( m_still_touching && (millis()-m_touchStart > 250)) {
     #ifdef CLYDE_DEBUG
     Serial.println("Clyde: Touchy-Feely triggered touch event.");
     #endif
-      
+
+    // reset the tickle count if we detect a touch longer than 250ms.
+    m_tickleCount = 0;
     //start color selection only if current cycle isn't laugh or select
     if (!Clyde.cycle()->is(SELECT) && !Clyde.cycle()->is(LAUGH)){
       startColorSelect();
