@@ -34,8 +34,8 @@ CClydeTouchyFeely::CClydeTouchyFeely()
   m_lastStopStep = 0;
   m_colorSelectEnabled = true;
   m_tickleCount = 0;
-  m_firstTickle = 0;
-  m_lastTickle = 0; // need that to trigger click event.
+  //  m_firstTickle = 0;
+  //  m_lastTickle = 0; // need that to trigger click event.
   m_lastAmbientOn = false;
   m_lastWhiteOn = false;
   m_still_touching = false;
@@ -88,33 +88,15 @@ void CClydeTouchyFeely::update(uint8_t apin, uint8_t dpin) {
     if( !m_still_touching ){
 #ifdef CLYDE_DEBUG
       Serial.println( "Clyde: Touchy-Feely detected a new touch." );
+      Serial.println( m_touchStatus );
 #endif
       // only call this once for a touch.
       m_touchStart = millis();
       m_still_touching = true;
     }
-  }
-  else {
-    if( !m_still_touching ){
-      // well, there hasn't been any touch before, so no need to evaluate
-      // any further..
-      return;
-    }
+  }else{
     // no touch anymore
     m_still_touching = false;
-    // release
-#ifdef CLYDE_DEBUG
-    Serial.print("Clyde: Touchy-Feely detected a release. Touch lasted: ");
-    Serial.println(millis() - m_touchStart);
-#endif
-    if( ( millis() - m_touchStart ) < 500 ){
-      // it's not a touch but a tickle or tab.
-      m_tickleCount++;
-      if( m_tickleCount==1 ){
-	m_firstTickle = millis();
-      }
-      m_lastTickle = millis();
-    }
     // stop color select, if we started the color select.
     if (Clyde.cycle()->is(SELECT))
       stopColorSelect();
@@ -123,11 +105,11 @@ void CClydeTouchyFeely::update(uint8_t apin, uint8_t dpin) {
   //trigger touch event (color select) after a few millis to protect from false positive
   //so, trigger, if still touching, touch lasts longer than 250ms
   //  if ((m_touchStatus & 0x0FFF) && (millis()-m_touchStart > 250)) {
-  if ( m_still_touching && (millis()-m_touchStart > 250)) {
+  //  if ( m_still_touching && (millis()-m_touchStart > 250)) {
+  if ( (millis()-m_touchStart > 250)) {
     #ifdef CLYDE_DEBUG
     Serial.println("Clyde: Touchy-Feely triggered touch event.");
     #endif
-
     // reset the tickle count if we detect a touch longer than 250ms.
     m_tickleCount = 0;
     //start color selection only if current cycle isn't laugh or select
@@ -136,11 +118,10 @@ void CClydeTouchyFeely::update(uint8_t apin, uint8_t dpin) {
       //call touched handler if any
       if (m_touchedHandler) m_touchedHandler();
     }
+  }else{
+    // evaluate whether we have had some clicks.
+    evaluateClickEvent();
   }
-
-  // evaluate whether we have had some clicks.
-  evaluateClickEvent();
-
   //call released handler if it is set and no legs are touched
   if (m_releasedHandler && !(m_touchStatus & 0x0FFF))
     m_releasedHandler();
@@ -149,8 +130,8 @@ void CClydeTouchyFeely::update(uint8_t apin, uint8_t dpin) {
 // we just check how long it was since last tickle, and if longer than a certain time period
 // we perform an action based on the number of clicks.
 void CClydeTouchyFeely::evaluateClickEvent() {
-  // if the last tickle was more than xx ms ago
-  if( (millis() - m_lastTickle ) > CLICK_TRIGGER_TIME ){
+  //  // if the last tickle was more than xx ms ago
+  //if( (millis() - m_lastTickle ) > CLICK_TRIGGER_TIME ){
     // and we have some tickles at all...
     if ( m_tickleCount > 0 ){
 #ifdef CLYDE_DEBUG
@@ -158,25 +139,40 @@ void CClydeTouchyFeely::evaluateClickEvent() {
       Serial.print( m_tickleCount );
       Serial.println( "tab(s)" );
 #endif
-      // evaluate tickle count.
-      if( m_tickleCount == 1 ){
+      if( m_touchStatus == 1 ){
 	Clyde.setAmbient(RGB(255, 0, 0)); 
 	Clyde.updateAmbientLight();
-	//Clyde.fadeAmbient( RGB( 255, 0, 0 ), 500 );
-      }else if( m_tickleCount == 2 ){
-	Clyde.setAmbient(RGB(0, 255, 0)); 
+	return;
+      }
+      if( m_touchStatus == 2 ){
+	Clyde.setAmbient(RGB(255, 255, 0)); 
 	Clyde.updateAmbientLight();
-	//Clyde.fadeAmbient( RGB( 0, 255, 0 ), 500 );
-      }else if( m_tickleCount == 3 ){
+	return;
+      }
+      if( m_touchStatus == 4 ){
+	Clyde.setAmbient(RGB(0, 255, 255)); 
+	Clyde.updateAmbientLight();
+	return;
+      }
+      if( m_touchStatus == 8 ){
 	Clyde.setAmbient(RGB(0, 0, 255)); 
 	Clyde.updateAmbientLight();
-	//Clyde.fadeAmbient( RGB( 0, 0, 255 ), 500 );
-      }else{
-	laugh();
+	return;
       }
+      if( m_touchStatus == 16 ){
+	Clyde.setAmbient(RGB(255, 0, 255)); 
+	Clyde.updateAmbientLight();
+	return;
+      }
+      if( m_touchStatus == 32 ){
+	Clyde.setAmbient(RGB(255, 255, 255)); 
+	Clyde.updateAmbientLight();
+	return;
+      }	
+      //Clyde.fadeAmbient( RGB( 255, 0, 0 ), 500 );
       m_tickleCount = 0;
     }
-  }
+    //  }
 }
 
 // that's just a simple function to increase the tickle count and keeping track

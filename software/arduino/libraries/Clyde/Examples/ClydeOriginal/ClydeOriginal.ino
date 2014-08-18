@@ -22,7 +22,7 @@ void setup() {
   sCmd.addCommand("READ_EEPROM", cmdReadEEPROM);
 
   // resetting the eeprom in order to write any changes to the default colors
-  //Clyde.eeprom()->reset();
+  Clyde.eeprom()->reset();
   Clyde.begin();
 }
 
