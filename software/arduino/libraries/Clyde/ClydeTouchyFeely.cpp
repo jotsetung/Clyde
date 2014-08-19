@@ -160,22 +160,22 @@ void CClydeTouchyFeely::tickleCheck() {
   if( !Clyde.cycle()->is(LAUGH) ){
     switch (m_lastStatus){
     case 1:
-      Clyde.fadeAmbient( COLOR_LEG_1, 0.5f );
+      Clyde.fadeAmbient( COLOR_LEG_1, 2 );
       break;
     case 2:
-      Clyde.fadeAmbient( COLOR_LEG_2, 0.5f );
+      Clyde.fadeAmbient( COLOR_LEG_2, 2 );
       break;
     case 4:
-      Clyde.fadeAmbient( COLOR_LEG_4, 0.5f );
+      Clyde.fadeAmbient( COLOR_LEG_4, 2 );
       break;
     case 8:
-      Clyde.fadeAmbient( COLOR_LEG_8, 0.5f );
+      Clyde.fadeAmbient( COLOR_LEG_8, 2 );
       break;
     case 16:
-      Clyde.fadeAmbient( COLOR_LEG_16, 0.5f );
+      Clyde.fadeAmbient( COLOR_LEG_16, 2 );
       break;
     case 32:
-      Clyde.fadeAmbient( COLOR_LEG_32, 0.5f );
+      Clyde.fadeAmbient( COLOR_LEG_32, 2 );
       break;
     }
   }

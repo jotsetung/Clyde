@@ -32,7 +32,7 @@
 
 CClyde Clyde;
 
-const float CClyde::CAmbientLight::SCALE_CONSTRAINT = 225.0f / 255.0f;
+const uint8_t CClyde::CAmbientLight::SCALE_CONSTRAINT = 225 / 255;
 
 SoftwareSerial CClyde::CMouth::mp3(CClyde::CMouth::RX_PIN, CClyde::CMouth::TX_PIN);
 
@@ -293,7 +293,7 @@ void CClyde::calibrateEye(uint16_t irValue) {
     if (irAvg < (uint16_t)((CEye::CALIB_FORMULA_B - CEye::CALIB_MIN_THRESHOLD_DIFF) / CEye::CALIB_FORMULA_A)) {
       //if the eye was not calibrated, turn on ambient light to show feedback
       if (!m_eye.calibrated)
-        fadeAmbient(m_ambient.savedColor, 0.1f);
+        fadeAmbient(m_ambient.savedColor, 10 );
 
       if (!m_eye.onceCalibrated)
         setWhite(255);
@@ -528,17 +528,18 @@ void CClyde::updateAmbientLight() {
   showAmbientLight();
 }
 
-void CClyde::updateAmbientLight(float *value, uint8_t target, float speed) {
+void CClyde::updateAmbientLight(uint8_t *value, uint8_t target, uint8_t speed) {
   //only fade if we haven't reached the desired level
   if (target == *value)
     return;
 
   //get the difference to the target, and the fade direction
-  float diff = target - *value;
+  int8_t diff = target - *value;
   int8_t dir = diff < 0 ? -1 : 1;
 
   //fade and limit to the defined max fade speed
-  *value += diff*dir < speed ? diff : speed * dir;
+  //*value += diff*dir < speed ? diff : speed * dir;
+  *value += diff*dir > speed ? diff : dir / speed;
 }
 
 void CClyde::showAmbientLight() {
@@ -554,11 +555,12 @@ void CClyde::updateWhiteLight() {
     return;
 
   //get the difference to the target, and the fade direction
-  float diff = m_white.targetBrightness - m_white.brightness;
+  int8_t diff = m_white.targetBrightness - m_white.brightness;
   int8_t dir = diff < 0 ? -1 : 1;
 
   //fade and limit to the defined max fade speed
-  m_white.brightness += diff*dir < m_white.fadeSpeed ? diff : m_white.fadeSpeed*dir;
+  //m_white.brightness += diff*dir < m_white.fadeSpeed ? diff : m_white.fadeSpeed*dir;
+  m_white.brightness += diff*dir > m_white.fadeSpeed ? diff : dir / m_white.fadeSpeed;
 
   //output new level
   showWhiteLight();
@@ -581,14 +583,14 @@ void CClyde::updatePersonalities() {
   }
 }
 
-void CClyde::fadeAmbient(const RGB &c, float spd) {
+void CClyde::fadeAmbient(const RGB &c, uint8_t spd) {
   m_ambient.targetColor = c;
 
   //calculate fade speed for each color
-  m_ambient.fadeSpeed = RGBf(
-    (m_ambient.targetColor.r - m_ambient.color.r) / 255.0f * spd,
-    (m_ambient.targetColor.g - m_ambient.color.g) / 255.0f * spd,
-    (m_ambient.targetColor.b - m_ambient.color.b) / 255.0f * spd
+  m_ambient.fadeSpeed = RGB(
+			     (m_ambient.targetColor.r - m_ambient.color.r) / ( 255 / spd ),
+			     (m_ambient.targetColor.g - m_ambient.color.g) / ( 255 / spd ),
+			     (m_ambient.targetColor.b - m_ambient.color.b) / ( 255 / spd )
   );
 
   //make sure that fade speeds are positive
@@ -602,30 +604,30 @@ void CClyde::setWhite(uint8_t b) {
   showWhiteLight();
 }
 
-void CClyde::fadeWhite(uint8_t b, float spd) {
+void CClyde::fadeWhite(uint8_t b, uint8_t spd) {
   m_white.targetBrightness = b;
 
-  m_white.fadeSpeed = (m_white.targetBrightness - m_white.brightness) / 255.0 * spd;
+  m_white.fadeSpeed = (m_white.targetBrightness - m_white.brightness) / ( 255 / spd );
   if (m_white.fadeSpeed < 0) m_white.fadeSpeed *= -1;
 }
 
 void CClyde::switchLights()
 {
   if (!m_white.isOn() && m_ambient.isOn()) {
-    fadeWhite(0, 0.1f);
+    fadeWhite(0, 10 );
   }
   else if (m_white.isOn() && m_ambient.isOn()) {
     // save the current ambient light before switching off.
     m_ambient.save();
-    fadeAmbient(RGB(0,0,0), 0.5f);
+    fadeAmbient(RGB(0,0,0), 2 );
   }
   else if (m_white.isOn() && !m_ambient.isOn()) {
-    fadeWhite(255, 0.3f);
+    fadeWhite(255, 3 );
     setPlayMode(PLAYMODE_SINGLE);
     play(SND_OFF);
   }
   else if (!m_white.isOn() && !m_ambient.isOn()) {
-    fadeAmbient(m_ambient.savedColor, 0.1f);
+    fadeAmbient(m_ambient.savedColor, 10 );
     setPlayMode(PLAYMODE_SINGLE);
     play(SND_ON);
   }
@@ -687,33 +689,33 @@ void CClyde::stopCycle() {  //TODO should this be a function pointer set when st
   }
 }
 
-void CClyde::blink(const RGB& rgb, uint32_t onDuration, uint32_t offDuration, uint8_t numBlinks) {
-  //calculate number of steps needed in the cycle
-  uint8_t steps = numBlinks*2 + 1;
+// void CClyde::blink(const RGB& rgb, uint32_t onDuration, uint32_t offDuration, uint8_t numBlinks) {
+//   //calculate number of steps needed in the cycle
+//   uint8_t steps = numBlinks*2 + 1;
 
-  //if numBlinks was zero (infinite loop), make space for on/off
-  if (steps == 1) steps = 2;
+//   //if numBlinks was zero (infinite loop), make space for on/off
+//   if (steps == 1) steps = 2;
 
-  //check number of step limit
-  if (steps > CAmbientCycle::MAX_CYCLE_LENGTH)
-    return;
+//   //check number of step limit
+//   if (steps > CAmbientCycle::MAX_CYCLE_LENGTH)
+//     return;
 
-  //set blinks color
-  RGB colors[steps];
-  uint32_t intervals[steps];
+//   //set blinks color
+//   RGB colors[steps];
+//   uint32_t intervals[steps];
 
-  for(int i = 0; i < steps; i++) {
-    if (i%2==1) {
-      colors[i] = rgb;
-      intervals[i] = offDuration;
-    }
-    else {
-      intervals[i] = onDuration;
-    }
-  }
+//   for(int i = 0; i < steps; i++) {
+//     if (i%2==1) {
+//       colors[i] = rgb;
+//       intervals[i] = offDuration;
+//     }
+//     else {
+//       intervals[i] = onDuration;
+//     }
+//   }
 
-  setCycle(BLINK, steps, &colors[0], &intervals[0], numBlinks==0?LOOP:NO_LOOP);
-}
+//   setCycle(BLINK, steps, &colors[0], &intervals[0], numBlinks==0?LOOP:NO_LOOP);
+// }
 
 void CClyde::updateCycle() {
   uint32_t now = millis();
@@ -728,7 +730,7 @@ void CClyde::updateCycle() {
   }
 
   //find where we are in the step 0-1
-  float t;
+  uint8_t t;
   t = m_cycle.stepEnd - m_cycle.stepStart;
   t = t == 0 ? 1 : (now - m_cycle.stepStart) / t;
 

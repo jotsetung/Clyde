@@ -36,31 +36,31 @@ struct RGB {
   }
 };
 
-/**
- * RGB color using float values
- */
-struct RGBf {
-  float r;
-  float g;
-  float b;
+/* /\** */
+/*  * RGB color using float values */
+/*  *\/ */
+/* struct RGBf { */
+/*   float r; */
+/*   float g; */
+/*   float b; */
   
-  RGBf(float nr = 0, float ng = 0, float nb = 0) { r = nr; g = ng; b = nb; }
+/*   RGBf(float nr = 0, float ng = 0, float nb = 0) { r = nr; g = ng; b = nb; } */
   
-  RGBf& operator =(const RGBf& a)
-  {
-    r = a.r;
-    g = a.g;
-    b = a.b;
-    return *this;
-  }
+/*   RGBf& operator =(const RGBf& a) */
+/*   { */
+/*     r = a.r; */
+/*     g = a.g; */
+/*     b = a.b; */
+/*     return *this; */
+/*   } */
   
-  RGBf& operator =(const RGB& a)
-  {
-    r = a.r;
-    g = a.g;
-    b = a.b;
-    return *this;
-  }
-};
+/*   RGBf& operator =(const RGB& a) */
+/*   { */
+/*     r = a.r; */
+/*     g = a.g; */
+/*     b = a.b; */
+/*     return *this; */
+/*   } */
+/* }; */
 
 #endif

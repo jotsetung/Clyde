@@ -15,6 +15,8 @@ void setup() {
   Wire.begin();
 
   Serial.begin(9600);
+  // Uncomment this line to talk ti Clyde over the Serial Monitor
+  //while (!Serial) ;
   sCmd.addCommand("SERIAL", cmdSerial);
   sCmd.addCommand("VERSION", cmdVersion);
   sCmd.addCommand("RESET", cmdReset);
@@ -24,12 +26,11 @@ void setup() {
   sCmd.addCommand("READ_EEPROM", cmdReadEEPROM);
 
   // set the time.
-  //setTime(8,29,0,1,1,11); // set time to Saturday 8:29:00am Jan 1 2011
+  setTime(8,29,0,1,1,11); // set time to Saturday 8:29:00am Jan 1 2011
   // create the alarms
-  //Alarm.alarmRepeat(8,30,0, testAlarm);  // 8:30am every day
+  Alarm.alarmRepeat(8,30,0, testAlarm);  // 8:30am every day
 
-
-  //	Clyde.eeprom()->reset();
+  Clyde.eeprom()->reset();
   Clyde.begin();
 }
 
@@ -54,6 +55,11 @@ void loop() {
 
 void testAlarm() {
   Serial.println( "TESTALARM" );
+  Serial.println( "TESTALARM" );
+  Serial.println( "TESTALARM" );
+  Serial.println( "TESTALARM" );
+  Serial.println( "TESTALARM" );
+  Serial.println( "TESTALARM" );  
 }
 
 //

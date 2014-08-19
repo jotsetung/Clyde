@@ -27,8 +27,8 @@
 #include "ClydeEEPROM.h"
 #include "ClydeModule.h"
 
-//#define CLYDE_DEBUG
-//#define CLYDE_DEBUG_WAIT     //wait five seconds before setup/init
+#define CLYDE_DEBUG
+#define CLYDE_DEBUG_WAIT     //wait five seconds before setup/init
 //#define CLYDE_DEBUG_EYE  //output extra values about the eye
 //#define CLYDE_DEBUG_AFRAID   //output extra values about AoD module
 
@@ -121,14 +121,15 @@ public:
    * The ambient RGB light.
    */
   struct CAmbientLight {
-    static const float SCALE_CONSTRAINT;  /**< Intensity constraint because of conflict with eye's IR sensor. */
+    //    static const float SCALE_CONSTRAINT;  /**< Intensity constraint because of conflict with eye's IR sensor. */
+    static const uint8_t SCALE_CONSTRAINT;  /**< Intensity constraint because of conflict with eye's IR sensor. */
     uint8_t r_pin;                        /**< Digital pin to control red color. */
     uint8_t g_pin;                        /**< Digital pin to control green color. */
     uint8_t b_pin;                        /**< Digital pin to control blue color. */
-    RGBf color;                           /**< Current color. */
+    RGB color;                           /**< Current color. */
     RGB targetColor;                      /**< Target color, used for fading. */
     RGB savedColor;                       /**< Saved ambient color to go back to. */
-    RGBf fadeSpeed;                       /**< Speed per color channel, used for fading. */
+    RGB fadeSpeed;                       /**< Speed per color channel, used for fading. */
 
     /**
      * Check if the ambient light is on.
@@ -144,9 +145,12 @@ public:
    */
   struct CWhiteLight {
     uint8_t pin;            /**< Digital pin to control the brightness. */
-    float brightness;       /**< Current brightness. */
-    float targetBrightness; /**< Target brightness, used for fading. */
-    float fadeSpeed;        /**< Speed, used for fading. */
+    /* float brightness;       /\**< Current brightness. *\/ */
+    /* float targetBrightness; /\**< Target brightness, used for fading. *\/ */
+    /* float fadeSpeed;        /\**< Speed, used for fading. *\/ */
+    uint8_t brightness;       /**< Current brightness. */
+    uint8_t targetBrightness; /**< Target brightness, used for fading. */
+    uint8_t fadeSpeed;        /**< Speed, used for fading. */
 
     /**
      * Check if the white light is on.
@@ -164,7 +168,8 @@ public:
     static const uint8_t CALIB_MAX_CHANGE = 40;         /**< Maximum value range accepted for calibration. */
     static const uint8_t CALIB_NUM_REPEATS = 125;       /**< Numbers of samples to check for calibration. */
     static const uint16_t CALIB_IR_BASE = 610;          /**< Base IR reading without any IR from outside. */
-    static const float CALIB_FORMULA_A = 0.5;           /**< Multiplier for calibration formula. */
+    static const uint8_t CALIB_FORMULA_A = 2;           /**< Division... for calibration formula. */
+    //    static const float CALIB_FORMULA_A = 0.5;           /**< Multiplier for calibration formula. */
     static const uint16_t CALIB_FORMULA_B = 450;        /**< Base for calibration formula. */
     static const uint16_t CALIB_MIN_THRESHOLD_DIFF = 50; /**< Minimum difference between base and threshold. */
     static const uint16_t CALIB_MAX_IR = 100;           /**< Maximum IR needed for calibration. Anything more means too much noise/sun. */
@@ -295,7 +300,7 @@ public:
   /**
    * Fade the ambient color to a given color.
    */
-  void fadeAmbient(const RGB &c, float spd);
+  void fadeAmbient(const RGB &c, uint8_t spd);
 
   /**
    * Get the white light object.
@@ -310,7 +315,7 @@ public:
   /**
    * Fade the white light to a given brightness.
    */
-  void fadeWhite(uint8_t b, float spd);
+  void fadeWhite(uint8_t b, uint8_t spd);
 
   /** Switch to the next of the four lights on/off states. */
   void switchLights();
@@ -354,7 +359,7 @@ public:
   /**
    * Make the ambient light blink.
    */
-  void blink(const RGB& rgb, uint32_t onDuration, uint32_t offDuration, uint8_t numBlinks);
+  //  void blink(const RGB& rgb, uint32_t onDuration, uint32_t offDuration, uint8_t numBlinks);
 
   /**
    * Set the loudmouth mp3 player play mode.
@@ -405,7 +410,7 @@ private:
   bool wasEyePressed(uint16_t irValue);
 
   /** Update a color channel of the ambient light. */
-  void updateAmbientLight(float *value, uint8_t target, float speed);
+  void updateAmbientLight(uint8_t *value, uint8_t target, uint8_t speed);
 
   /** Show the current ambient light color. */
   void showAmbientLight();
