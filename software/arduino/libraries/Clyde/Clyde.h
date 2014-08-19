@@ -116,7 +116,7 @@ public:
     CClydeModule* idLast;                        /**< Module identified last time we checked. */
     uint8_t idCount;                             /**< Number of times idLast was identified in a row. */
   };
-  
+
   /**
    * The ambient RGB light.
    */
@@ -129,16 +129,16 @@ public:
     RGB targetColor;                      /**< Target color, used for fading. */
     RGB savedColor;                       /**< Saved ambient color to go back to. */
     RGBf fadeSpeed;                       /**< Speed per color channel, used for fading. */
-    
+
     /**
      * Check if the ambient light is on.
      */
     bool isOn() { return targetColor.r > 0 || targetColor.g > 0 || targetColor.b > 0; }
-    
+
     /** Save the current color. */
     void save() { if (color.r + color.g + color.b > 10) savedColor = RGB(color.r, color.g, color.b); }
   };
-  
+
   /**
    * The white desk light.
    */
@@ -147,13 +147,13 @@ public:
     float brightness;       /**< Current brightness. */
     float targetBrightness; /**< Target brightness, used for fading. */
     float fadeSpeed;        /**< Speed, used for fading. */
-    
+
     /**
      * Check if the white light is on.
      */
     bool isOn() { return targetBrightness < 255; }
   };
-  
+
   /**
    * The squishy eye.
    */
@@ -166,10 +166,10 @@ public:
     static const uint16_t CALIB_IR_BASE = 610;          /**< Base IR reading without any IR from outside. */
     static const float CALIB_FORMULA_A = 0.5;           /**< Multiplier for calibration formula. */
     static const uint16_t CALIB_FORMULA_B = 450;        /**< Base for calibration formula. */
-    static const uint16_t CALIB_MIN_THRESHOLD_DIFF = 50; /**< Minimum difference between base and threshold. */    
+    static const uint16_t CALIB_MIN_THRESHOLD_DIFF = 50; /**< Minimum difference between base and threshold. */
     static const uint16_t CALIB_MAX_IR = 100;           /**< Maximum IR needed for calibration. Anything more means too much noise/sun. */
     static const uint8_t PRESS_COUNT_THRESHOLD = 8;     /**< Number of press detection needed to trigger a press event. */
-    
+
     uint8_t pin;              /**< Analog signal pin of the IR sensor. */
     bool onceCalibrated;      /**< Flag to track the first time we calibrate. */
     bool calibrated;          /**< Flag to track if the eye is currently calibrated. */
@@ -185,12 +185,12 @@ public:
     uint32_t pressedStart;    /**< Time when we detected the start of a press. */
     uint8_t pressedCount;     /**< Number of time we detected a pressed state consecutively. */
     uint32_t pressLock;       /**< Time until when pressed events can not trigger. */
-    
+
     #ifdef CLYDE_DEBUG
       uint16_t restartCount;  /**< Number of time calibration restarted because of noise since last calibration. */
-    #endif    
+    #endif
   };
-  
+
   /**
    * The ambient light cycle.
    */
@@ -205,21 +205,21 @@ public:
     RGB colors[MAX_CYCLE_LENGTH];               /**< Colors of cycle. */
     uint32_t intervals[MAX_CYCLE_LENGTH];       /**< Intervals in millis. */
     ECycleLoop loop;                            /**< Looping parameter. */
-    
+
     /**
      * Check if there is an ongoing cycle.
      */
     bool isOn() { return type != OFF; }
-    
+
     /**
      * Check if the current cycle matches a given type.
      */
     bool is(ECycleType t) { return t == type; }
-    
+
     /** Turn off the cycle. */
     void off() { type = OFF; }
   };
-  
+
   /**
    * The mouth / speaker / mp3 player
    */
@@ -234,10 +234,10 @@ public:
     bool detected;
     EOpCode waitingOpCode;
     uint32_t lastCmdTime;
-    
+
     static SoftwareSerial mp3;
   };
-    
+
 private:
   CModulePosition m_modules[CModulePosition::NUM_MODULES];
   CAmbientLight m_ambient;
@@ -246,23 +246,23 @@ private:
   CEye m_eye;
   CAmbientCycle m_cycle;
   CMouth m_mouth;
-  
+
 public:
   /** Contructor. */
   CClyde();
-  
+
   /** Initialize Clyde. */
   void begin();
-  
+
   /** Check if eye was calibrated once. */
   bool wasEyeCalibratedOnce() { return m_eye.onceCalibrated; }
 
   /** Update the eye / infrared switch. */
   void updateEye();
-  
+
   /** Update the mouth / sound shield. */
   void updateMouth();
-  
+
   /** Update the ambient light. */
   void updateAmbientLight();
 
@@ -271,12 +271,12 @@ public:
 
   /** Update the personality modules. */
   void updatePersonalities();
-  
+
   /**
    * Get a module position for a given index.
    */
   CModulePosition* module(uint8_t m) { return &m_modules[m]; }
-  
+
   /**
    * Get the eeprom object.
    */
@@ -286,27 +286,27 @@ public:
    * Get the ambient light object.
    */
   CAmbientLight* ambient() { return &m_ambient; }
-  
+
   /**
    * Set ambient color.
    */
   void setAmbient(const RGB &c);
-  
+
   /**
    * Fade the ambient color to a given color.
    */
   void fadeAmbient(const RGB &c, float spd);
-    
+
   /**
    * Get the white light object.
    */
   CWhiteLight* white() { return &m_white; }
-  
+
   /**
    * Set the white light.
    */
   void setWhite(uint8_t b);
-  
+
   /**
    * Fade the white light to a given brightness.
    */
@@ -314,17 +314,17 @@ public:
 
   /** Switch to the next of the four lights on/off states. */
   void switchLights();
-  
+
   /**
    * Get the ambient light cycle object.
    */
   CAmbientCycle* cycle() { return &m_cycle; }
-  
+
   /**
    * Set the ambient light cycle.
    */
   void setCycle(ECycleType type, uint8_t steps, const RGB *colors, const uint8_t *intervals, ECycleLoop loop);
-  
+
   /**
    * Set the ambient light cycle.
    */
@@ -339,44 +339,44 @@ public:
    * Move the cycle to a given step.
    */
   void setCycleStep(uint8_t step);
-  
+
   /**
    * Skip to the next cycle step.
    */
   void cycleNextStep(uint32_t now);
-  
+
   /** Speed up the end of the current cycle. */
   void speedUpCycle(uint32_t factor);
 
   /** Stop the cycle. */
   void stopCycle();
-  
+
   /**
    * Make the ambient light blink.
    */
   void blink(const RGB& rgb, uint32_t onDuration, uint32_t offDuration, uint8_t numBlinks);
-  
+
   /**
    * Set the loudmouth mp3 player play mode.
    */
   EOpCode setPlayMode(EPlayMode playmode);
-  
+
   /**
    * Play a file using the Loudmouth shield.
    */
   EOpCode play(uint16_t index);
-  
+
   /**
    * Get the play state of the Loudmouth shield.
    */
   EOpCode playState();
-  
+
   /**
    * Set volume of the Loudmouth shield.
    * @volume level 0 - 31
    */
-  EOpCode setVolume(uint8_t volume);  
-  
+  EOpCode setVolume(uint8_t volume);
+
   /**
    * Pause the audio of the Loudmouth shield.
    */
@@ -386,30 +386,30 @@ public:
    * Stop the audio of the Loudmouth shield.
    */
   EOpCode stop(void);
-  
+
 private:
   /** Detect the personality modules. */
   void detectPersonalities();
 
   /** Detect the loudmouth shield. */
   void detectMouth();
-  
+
   /**
    * Calibrate the eye.
    */
   void calibrateEye(uint16_t irValue);
-  
+
   /**
    * Check if the eye was pressed given a read sensor value.
    */
   bool wasEyePressed(uint16_t irValue);
-  
+
   /** Update a color channel of the ambient light. */
   void updateAmbientLight(float *value, uint8_t target, float speed);
-  
+
   /** Show the current ambient light color. */
   void showAmbientLight();
-    
+
   /** Show the current white light brightness. */
   void showWhiteLight();
 
@@ -417,16 +417,16 @@ private:
    * Set the ambient light cycle.
    */
   void setCycle(ECycleType type, uint8_t steps, const RGB* colors, ECycleLoop loop);
-  
+
   /** Update the ambient light cycle. */
   void updateCycle();
-  
+
   /**
    * Update the ambient light cycle to the next step.
    */
   void updateCycleNextStep(uint32_t now);
 };
 
-extern CClyde Clyde; 
+extern CClyde Clyde;
 
 #endif
