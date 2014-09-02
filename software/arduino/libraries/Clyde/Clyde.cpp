@@ -542,7 +542,7 @@ void CClyde::updateAmbientLight() {
 }
 
 // JOR void CClyde::updateAmbientLight(float *value, uint8_t target, float speed) {
-void CClyde::updateAmbientLight(uint8_t *value, uint8_t target, float speed) {
+void CClyde::updateAmbientLight(uint8_t *value, uint8_t target, uint8_t speed) {
   //only fade if we haven't reached the desired level
   if (target == *value)
     return;

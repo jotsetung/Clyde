@@ -424,7 +424,7 @@ private:
 
   /** Update a color channel of the ambient light. */
   // JOR void updateAmbientLight(float *value, uint8_t target, float speed);
-  void updateAmbientLight(uint8_t *value, uint8_t target, float speed);
+  void updateAmbientLight(uint8_t *value, uint8_t target, uint8_t speed);
 
   /** Show the current ambient light color. */
   void showAmbientLight();
