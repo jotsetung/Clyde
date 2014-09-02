@@ -45,22 +45,22 @@ bool CClydeAfraidOfTheDark::init(uint8_t apin, uint8_t dpin) {
   //setup pins
   pinMode(dpin, INPUT);
   digitalWrite(dpin, LOW);
-  
+
   #ifdef CLYDE_DEBUG
   Serial.println("Clyde: Afraid of the Dark personality initialized.");
   #endif
-  
-  return true; 
+
+  return true;
 }
 
 void CClydeAfraidOfTheDark::update(uint8_t apin, uint8_t dpin) {
-  unsigned short light = analogRead(apin);  
-  
+  unsigned short light = analogRead(apin);
+
   #ifdef CLYDE_DEBUG_AFRAID
   Serial.print("Clyde: light level = ");
   Serial.println(light);
   #endif
-  
+
   //if the white light is on, then disable
   if (Clyde.white()->isOn()) {
     m_lock = millis() + WHITE_LIGHT_LOCK_TIME;
@@ -78,8 +78,20 @@ void CClydeAfraidOfTheDark::update(uint8_t apin, uint8_t dpin) {
     }
     //if we're ready for a sunset, and we reached the set time, go sunset
     else if (m_ready) {
-        startSunset();
-        m_ready = false;
+#ifdef CLYDE_DEBUG
+      Serial.println("Clyde: Afraid of the Dark personality start sunset.");
+#endif
+
+      if (Clyde.cycle()->is(SUNSET))
+	return;
+
+      Clyde.setCycle(SUNSET, m_sunsetSteps, m_sunsetColors, m_sunsetIntervals, NO_LOOP);
+#ifdef ENABLE_MOUTH
+      Clyde.setPlayMode(PLAYMODE_SINGLE);
+      Clyde.play(SND_AU_CLAIR_DE_LA_LUNE);
+#endif
+
+      m_ready = false;
     }
   }
   //if the light is above the reset threshold, then
@@ -92,22 +104,6 @@ void CClydeAfraidOfTheDark::update(uint8_t apin, uint8_t dpin) {
   }
 
   m_lastLight = light;
-}
-
-//TODO probably doesn't need extra method
-void CClydeAfraidOfTheDark::startSunset() {
-  #ifdef CLYDE_DEBUG
-  Serial.println("Clyde: Afraid of the Dark personality start sunset.");
-  #endif
-
-  if (Clyde.cycle()->is(SUNSET))
-    return;
-  
-  Clyde.setCycle(SUNSET, m_sunsetSteps, m_sunsetColors, m_sunsetIntervals, NO_LOOP);
-#ifdef ENABLE_MOUTH
-  Clyde.setPlayMode(PLAYMODE_SINGLE);
-  Clyde.play(SND_AU_CLAIR_DE_LA_LUNE);
-#endif
 }
 
 #endif

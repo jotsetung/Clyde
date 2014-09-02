@@ -30,31 +30,31 @@ class CClydeAfraidOfTheDark : public CClydeModule {
   static const uint16_t RESET_THRESHOLD = 50;         /**< threshold to reach above to start checking to starting a new sunset cycle */
   static const uint16_t THRESHOLD_LOCK_TIME = 1000;    /**< time in millis to stay beyond threshold to trigger */
   static const uint16_t WHITE_LIGHT_LOCK_TIME = 2000; /**< time in millis to lock after white light is on */
-  
+
   uint32_t m_lock;        /**< time in millis until when we need to stay below threshold to trigger sunset */
   uint16_t m_lastLight;   /**< last detected light level */
   bool m_ready;           /**< true if we are checking for low light level trigger */
   RGB m_sunsetColors[CClyde::CAmbientCycle::MAX_CYCLE_LENGTH];         /**< color of the sunset cycle */
   uint32_t m_sunsetIntervals[CClyde::CAmbientCycle::MAX_CYCLE_LENGTH];  /**< intervals of the sunset cycle */
   uint8_t m_sunsetSteps;  /**< number of steps in the sunset cycle */
-  
-public:  
+
+public:
   /** Constructor. */
   CClydeAfraidOfTheDark();
-  
+
   /**
    * Initialize the module with specified analog and digital pins.
    */
   bool init(uint8_t apin, uint8_t dpin);
-  
+
   /**
    * Update the module using the specified analog and digital pins.
-   */   
+   */
   void update(uint8_t apin, uint8_t dpin);
-  
-private:
+
+  //private:
   /** Start the sunset cycle. */
-  void startSunset();
+  //void startSunset();
 };
 
 //TODO

@@ -24,9 +24,9 @@ struct RGB {
   uint8_t r;
   uint8_t g;
   uint8_t b;
-  
+
   RGB(uint8_t nr = 0, uint8_t ng = 0, uint8_t nb = 0) { r = nr; g = ng; b = nb; }
-  
+
   RGB& operator =(const RGB& a)
   {
     r = a.r;
@@ -39,28 +39,30 @@ struct RGB {
 /**
  * RGB color using float values
  */
-struct RGBf {
-  float r;
-  float g;
-  float b;
-  
-  RGBf(float nr = 0, float ng = 0, float nb = 0) { r = nr; g = ng; b = nb; }
-  
-  RGBf& operator =(const RGBf& a)
-  {
-    r = a.r;
-    g = a.g;
-    b = a.b;
-    return *this;
-  }
-  
-  RGBf& operator =(const RGB& a)
-  {
-    r = a.r;
-    g = a.g;
-    b = a.b;
-    return *this;
-  }
-};
+// don't think we will actually need these, as we may not see any difference between a
+// light value of 200 and 200.4
+/* struct RGBf { */
+/*   float r; */
+/*   float g; */
+/*   float b; */
+
+/*   RGBf(float nr = 0, float ng = 0, float nb = 0) { r = nr; g = ng; b = nb; } */
+
+/*   RGBf& operator =(const RGBf& a) */
+/*   { */
+/*     r = a.r; */
+/*     g = a.g; */
+/*     b = a.b; */
+/*     return *this; */
+/*   } */
+
+/*   RGBf& operator =(const RGB& a) */
+/*   { */
+/*     r = a.r; */
+/*     g = a.g; */
+/*     b = a.b; */
+/*     return *this; */
+/*   } */
+/* }; */
 
 #endif

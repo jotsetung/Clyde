@@ -18,7 +18,7 @@
 
 #ifdef ENABLE_AFRAID_OF_THE_DARK
   #include "ClydeAfraidOfTheDark.h"
-#endif 
+#endif
 
 #ifdef ENABLE_TOUCHY_FEELY
   #include "ClydeTouchyFeely.h"
@@ -50,7 +50,7 @@ CClyde::CClyde() {
   m_modules[1].apin = 2;
   m_modules[1].idLast = NULL;
   m_modules[1].idCount = 0;
-  
+
   //init ambient light
   m_ambient.r_pin = 5;
   m_ambient.g_pin = 6;
@@ -58,14 +58,14 @@ CClyde::CClyde() {
   m_ambient.savedColor = RGB(0, 0, 0);
   m_ambient.fadeSpeed = RGB(0, 0, 0);
   setAmbient(RGB(0,0,0));
-  
+
   //init white light
   //we use 254 brightness as a hack to remove the flicker on first fade-in,
   //but this adds a flash on startup instead, which is kinda neat
   //TODO look for a better solution
   m_white.pin = 11;
   setWhite(254);
-  
+
   //init eye
   m_eye.pin = 0;
   m_eye.onceCalibrated = false;
@@ -82,11 +82,11 @@ CClyde::CClyde() {
   m_eye.pressedStart = 0;
   m_eye.pressedCount = 0;
   m_eye.pressLock = 0;
-  
+
 #ifdef CLYDE_DEBUG
   m_eye.restartCount = 0;
 #endif
-  
+
   //init ambient cycle
   m_cycle.type = OFF;
   m_cycle.numSteps = 0;
@@ -97,7 +97,7 @@ CClyde::CClyde() {
   memset((void*)&m_cycle.colors[0], 0, sizeof(RGB)*CAmbientCycle::MAX_CYCLE_LENGTH);
   memset((void*)&m_cycle.intervals[0], 0, sizeof(uint32_t)*CAmbientCycle::MAX_CYCLE_LENGTH);
   m_cycle.loop = NO_LOOP;
-  
+
 #ifdef ENABLE_MOUTH
   m_mouth.detected = false;
   m_mouth.waitingOpCode = OP_NONE;
@@ -118,8 +118,8 @@ void CClyde::begin() {
 
   //setup ambient light pins
   pinMode(m_ambient.r_pin, OUTPUT);
-  pinMode(m_ambient.g_pin, OUTPUT); 
-  pinMode(m_ambient.b_pin, OUTPUT); 
+  pinMode(m_ambient.g_pin, OUTPUT);
+  pinMode(m_ambient.b_pin, OUTPUT);
   analogWrite(m_ambient.r_pin, m_ambient.color.r);
   analogWrite(m_ambient.g_pin, m_ambient.color.g);
   analogWrite(m_ambient.b_pin, m_ambient.color.b);
@@ -136,21 +136,21 @@ void CClyde::begin() {
   pinMode(CMouth::DETECT_PIN, INPUT);
   pinMode(CMouth::RX_PIN, INPUT);
   pinMode(CMouth::TX_PIN, OUTPUT);
-  
+
   digitalWrite(CMouth::SELECT_PIN, HIGH);
 #endif
-  
+
   //load parameters from eeprom
   m_eeprom.readAmbientColor(&m_ambient.savedColor);
-  
+
   //detect the personality modules
   detectPersonalities();
-  
+
 #ifdef ENABLE_MOUTH
   //detect the loudmouth shield
   detectMouth();
 #endif
-  
+
   //set default lights off
   setAmbient(RGB(0,0,0));
   setWhite(255);
@@ -160,16 +160,16 @@ void CClyde::detectPersonalities() {
   //detect personalities
   for(int i = 0; i <= CModulePosition::ID_REPEAT; i++) {
     //check each module position
-    
+
     for(int j = 0; j < CModulePosition::NUM_MODULES; j++) {
       CClydeModule* newModule = NULL;
-      
+
       //TODO: this could be dynamic, modules could register. could have different detection schemes.
       pinMode(m_modules[j].dpin, OUTPUT);
       digitalWrite(m_modules[j].dpin, HIGH);
       uint16_t idValue = analogRead(m_modules[j].apin);
       pinMode(m_modules[j].dpin, INPUT);
-            
+
       //check for each type of module
       #ifdef ENABLE_AFRAID_OF_THE_DARK
       if (AfraidOfTheDark.id(idValue))
@@ -179,7 +179,7 @@ void CClyde::detectPersonalities() {
       if (TouchyFeely.id(idValue))
         newModule = &TouchyFeely;
       #endif
-        
+
       //if the detected module is different that last, then reset detection count
       //TODO: reverse this if block to check for equality first
       if (newModule != m_modules[j].idLast) {
@@ -203,12 +203,12 @@ void CClyde::detectPersonalities() {
             }
           }
           //if no module is detected, the reset module position to default
-          else {     
+          else {
             pinMode(m_modules[j].dpin, INPUT);
-            digitalWrite(m_modules[j].dpin, LOW); 
-            
-            m_modules[j].module = newModule;          
-            m_modules[j].idCount++; 
+            digitalWrite(m_modules[j].dpin, LOW);
+
+            m_modules[j].module = newModule;
+            m_modules[j].idCount++;
           }
         }
       }
@@ -216,14 +216,14 @@ void CClyde::detectPersonalities() {
   }
 }
 
+#ifdef ENABLE_MOUTH
 void CClyde::detectMouth() {
   #ifdef CLYDE_DEBUG
     Serial.println("Clyde: Trying to detect Loudmouth. Request set play mode: Single Loop Mode");
   #endif
-#ifdef ENABLE_MOUTH
     m_mouth.waitingOpCode = Clyde.setPlayMode(PLAYMODE_SINGLE_CYCLE);
-#endif
 }
+#endif
 
 void CClyde::updateEye() {
   //read IR value
@@ -236,10 +236,10 @@ void CClyde::updateEye() {
   if (wasEyePressed(irValue)) {
     #ifdef CLYDE_DEBUG
       Serial.println("Clyde: eye was pressed.");
-    #endif  
+    #endif
 
     //and the ambient cycle is on, then turn it off
-    if (m_cycle.isOn()) 
+    if (m_cycle.isOn())
       stopCycle();
     //if not, then switch the lights to the next state
     else
@@ -247,10 +247,10 @@ void CClyde::updateEye() {
   }
 }
 
-void CClyde::calibrateEye(uint16_t irValue) {  
+void CClyde::calibrateEye(uint16_t irValue) {
   //check if calibration was locked
   if (millis() < m_eye.calibLock) return;
-  
+
   //if IR has never been calibrated, blink white light until it is
   if(!m_eye.onceCalibrated) {
     long now = millis();
@@ -261,11 +261,11 @@ void CClyde::calibrateEye(uint16_t irValue) {
       setWhite(0);
       m_eye.onceCalibrated = true; //TODO: use a better variable for this
     }
-  } 
-  
+  }
+
   //if the eye is pressed, don't try to calibrate
   if (m_eye.pressedCount > 0) return;
-  
+
   //get difference since last time
   int32_t irDiff = irValue > m_eye.irLast ? irValue - m_eye.irLast : m_eye.irLast - irValue;
 
@@ -279,7 +279,7 @@ void CClyde::calibrateEye(uint16_t irValue) {
   else {
     m_eye.calibCount = 0;
     m_eye.irMin = m_eye.irMax = irValue;
-    
+
     #ifdef CLYDE_DEBUG
       m_eye.restartCount++;
     #endif
@@ -287,17 +287,17 @@ void CClyde::calibrateEye(uint16_t irValue) {
 
   //check if we've read enough samples to calibrate
   if (m_eye.calibCount >= CEye::CALIB_NUM_REPEATS) {
-    
+
     //check if the range of values is beyond the threshold, if so then restart
     if (m_eye.irMax-m_eye.irMin >= CEye::CALIB_MAX_CHANGE) {
       m_eye.calibCount = 0;
       m_eye.irMin = m_eye.irMax = irValue;
       return;
     }
-    
+
     //average ir reading
     uint16_t irAvg = (m_eye.irMin + m_eye.irMax) / 2;
-    
+
     //only calibrate if the threshold is above a certain limit
     //if not it's too unpredictable (e.g. the sun is shining on it)
     if (irAvg < (uint16_t)((CEye::CALIB_FORMULA_B - CEye::CALIB_MIN_THRESHOLD_DIFF) / CEye::CALIB_FORMULA_A)) {
@@ -305,7 +305,7 @@ void CClyde::calibrateEye(uint16_t irValue) {
       if (!m_eye.calibrated)
         //fadeAmbient(m_ambient.savedColor, 0.1f);
         fadeAmbient(m_ambient.savedColor, 10);
-      
+
       if (!m_eye.onceCalibrated)
         setWhite(255);
 
@@ -329,8 +329,8 @@ void CClyde::calibrateEye(uint16_t irValue) {
           Serial.println(m_eye.restartCount);
         }
         m_eye.restartCount = 0;
-      #endif      
-     
+      #endif
+
       m_eye.irThreshold = newThreshold;
     }
     //if there's NOT enough IR emitted by the circuit to recalibrate, then set to recalibrate
@@ -339,10 +339,10 @@ void CClyde::calibrateEye(uint16_t irValue) {
       setAmbient(RGB(0, 0, 0));
       setWhite(255);
       m_eye.calibrated = false;
-      
+
       //setPlayMode(PLAYMODE_SINGLE);
       //play(SND_ERROR);
-      
+
       #ifdef CLYDE_DEBUG
       Serial.print("Clyde: eye uncalibrated. not enough IR detected, check circuit. ir = ");
       Serial.print(irAvg);
@@ -350,7 +350,7 @@ void CClyde::calibrateEye(uint16_t irValue) {
       Serial.println((uint16_t)((CEye::CALIB_FORMULA_B - CEye::CALIB_MIN_THRESHOLD_DIFF) / CEye::CALIB_FORMULA_A));
       #endif
     }
-    
+
     //reset values
     m_eye.calibCount = 0;
     m_eye.irMin = 1025;
@@ -368,7 +368,7 @@ bool CClyde::wasEyePressed(uint16_t irValue) {
   //Serial.print("Clyde: IR = ");
   //Serial.println(irValue);
   //#endif
-  
+
   //if the eye press is detected enough time, trigger press event
   if (m_eye.pressedCount == CEye::PRESS_COUNT_THRESHOLD) {
     //and we detect that's it's still pressed,
@@ -382,7 +382,7 @@ bool CClyde::wasEyePressed(uint16_t irValue) {
         //blink(RGB(255,0,0), 200, 200, 3);
         setAmbient(RGB(0, 0, 0));
         setWhite(255);
-#ifdef ENABLE_MOUTH        
+#ifdef ENABLE_MOUTH
         setPlayMode(PLAYMODE_SINGLE);
         play(SND_ERROR);
 #endif
@@ -446,25 +446,25 @@ EOpCode CClyde::setPlayMode(EPlayMode playmode)
   m_mouth.mp3.write(OP_SET_PLAY_MODE);
   m_mouth.mp3.write(playmode);
   m_mouth.mp3.write(0x7E);
-  
+
   m_mouth.lastCmdTime = millis();
-  
+
   return OP_SET_PLAY_MODE;
 }
 
 EOpCode CClyde::play(uint16_t index)
 {
   if (!m_mouth.detected) return OP_NONE;
-  
+
   m_mouth.mp3.write(0x7E);
   m_mouth.mp3.write(0x04);
   m_mouth.mp3.write(OP_PLAY);
   m_mouth.mp3.write((index >> 8) & 0xFF);
   m_mouth.mp3.write(index & 0xFF);
   m_mouth.mp3.write(0x7E);
-  
+
   m_mouth.lastCmdTime = millis();
-  
+
   return OP_PLAY;
 }
 
@@ -476,9 +476,9 @@ EOpCode CClyde::playState()
   m_mouth.mp3.write(0x02);
   m_mouth.mp3.write(OP_PLAY_STATE);
   m_mouth.mp3.write(0x7E);
-  
+
   m_mouth.lastCmdTime = millis();
-  
+
   return OP_PLAY_STATE;
 }
 
@@ -493,9 +493,9 @@ EOpCode CClyde::setVolume(uint8_t volume)
   m_mouth.mp3.write(OP_SET_VOLUME);
   m_mouth.mp3.write(volume);
   m_mouth.mp3.write(0x7E);
-  
+
   m_mouth.lastCmdTime = millis();
-  
+
   return OP_SET_VOLUME;
 }
 
@@ -507,9 +507,9 @@ EOpCode CClyde::pause(void)
   m_mouth.mp3.write(0x02);
   m_mouth.mp3.write(OP_PAUSE);
   m_mouth.mp3.write(0x7E);
-  
+
   m_mouth.lastCmdTime = millis();
-  
+
   return OP_PAUSE;
 }
 
@@ -521,9 +521,9 @@ EOpCode CClyde::stop(void)
   m_mouth.mp3.write(0x02);
   m_mouth.mp3.write(OP_STOP);
   m_mouth.mp3.write(0x7E);
-  
+
   m_mouth.lastCmdTime = millis();
-  
+
   return OP_PAUSE;
 }
 #endif
@@ -541,13 +541,15 @@ void CClyde::updateAmbientLight() {
   showAmbientLight();
 }
 
-void CClyde::updateAmbientLight(float *value, uint8_t target, float speed) {
+// JOR void CClyde::updateAmbientLight(float *value, uint8_t target, float speed) {
+void CClyde::updateAmbientLight(uint8_t *value, uint8_t target, float speed) {
   //only fade if we haven't reached the desired level
   if (target == *value)
     return;
 
   //get the difference to the target, and the fade direction
-  float diff = target - *value;
+  // JOR float diff = target - *value;
+  int8_t diff = target - *value;
   int8_t dir = diff < 0 ? -1 : 1;
 
   //fade and limit to the defined max fade speed
@@ -558,7 +560,7 @@ void CClyde::showAmbientLight() {
   //output new color
   analogWrite(m_ambient.r_pin, (uint8_t)(m_ambient.color.r * CAmbientLight::SCALE_CONSTRAINT));
   analogWrite(m_ambient.g_pin, (uint8_t)(m_ambient.color.g * CAmbientLight::SCALE_CONSTRAINT));
-  analogWrite(m_ambient.b_pin, (uint8_t)(m_ambient.color.b * CAmbientLight::SCALE_CONSTRAINT));  
+  analogWrite(m_ambient.b_pin, (uint8_t)(m_ambient.color.b * CAmbientLight::SCALE_CONSTRAINT));
 }
 
 void CClyde::updateWhiteLight() {
@@ -596,7 +598,7 @@ void CClyde::updatePersonalities() {
 
 // void CClyde::fadeAmbient(const RGB &c, float spd) {
 //   m_ambient.targetColor = c;
-  
+
 //   //calculate fade speed for each color
 //   m_ambient.fadeSpeed = RGBf(
 //     (m_ambient.targetColor.r - m_ambient.color.r) / 255.0f * spd,
@@ -613,9 +615,14 @@ void CClyde::updatePersonalities() {
 // the fadeAmbient version without floats.
 void CClyde::fadeAmbient(const RGB &c, uint8_t tm) {
   m_ambient.targetColor = c;
-  
+
   //calculate fade speed for each color
-  m_ambient.fadeSpeed = RGBf(
+  // JOR m_ambient.fadeSpeed = RGBf(
+  //   (m_ambient.targetColor.r - m_ambient.color.r) / 255 / tm,
+  //   (m_ambient.targetColor.g - m_ambient.color.g) / 255 / tm,
+  //   (m_ambient.targetColor.b - m_ambient.color.b) / 255 / tm
+  // );
+  m_ambient.fadeSpeed = RGB(
     (m_ambient.targetColor.r - m_ambient.color.r) / 255 / tm,
     (m_ambient.targetColor.g - m_ambient.color.g) / 255 / tm,
     (m_ambient.targetColor.b - m_ambient.color.b) / 255 / tm
@@ -648,34 +655,30 @@ void CClyde::fadeWhite(uint8_t b, uint16_t tm) {
 }
 
 void CClyde::switchLights()
-{ 
-  if (!m_white.isOn() && m_ambient.isOn()) {
-    //    fadeWhite(0, 0.1f);
-    fadeWhite(0, 10);
-  }
-  else if (m_white.isOn() && m_ambient.isOn()) {
-    // save the current ambient light before switching off.
-    m_ambient.save();
-    //fadeAmbient(RGB(0,0,0), 0.5f);
-    fadeAmbient(RGB(0,0,0), 2 );
-  }
-  else if (m_white.isOn() && !m_ambient.isOn()) {
-    //    fadeWhite(255, 0.3f);
-    fadeWhite(255, 3);
+{
+  if( m_white.isOn() ){
+    if( m_ambient.isOn() ){
+      // save the current ambient light before swithing off.
+      m_ambient.save();
+      fadeAmbient( RGB( 0, 0, 0 ), 2 );
+    }else{
+      fadeWhite( 255, 3 );
 #ifdef ENABLE_MOUTH
     setPlayMode(PLAYMODE_SINGLE);
     play(SND_OFF);
 #endif
-  }
-  else if (!m_white.isOn() && !m_ambient.isOn()) {
-    //fadeAmbient(m_ambient.savedColor, 0.1f);
-    fadeAmbient(m_ambient.savedColor, 10 );
+    }
+  }else{
+    if( m_ambient.isOn() ){
+      fadeWhite( 0, 10 );
+    }else{
+      fadeAmbient( m_ambient.savedColor, 10 );
 #ifdef ENABLE_MOUTH
     setPlayMode(PLAYMODE_SINGLE);
     play(SND_ON);
 #endif
+    }
   }
-  
 #ifdef CLYDE_DEBUG
   Serial.print("Switched lights: white is ");
   Serial.print(m_white.isOn() ? "ON" : "OFF");
@@ -687,35 +690,35 @@ void CClyde::switchLights()
 void CClyde::setCycle(ECycleType type, uint8_t steps, const RGB *colors, const uint8_t *intervals, ECycleLoop loop) {
   for(int i = 0; i < steps; i++)
     m_cycle.intervals[i] = *(intervals + i);
-  
-  setCycle(type, steps, colors, loop);  
+
+  setCycle(type, steps, colors, loop);
 }
 void CClyde::setCycle(ECycleType type, uint8_t steps, const RGB *colors, const uint16_t *intervals, ECycleLoop loop) {
   for(int i = 0; i < steps; i++)
     m_cycle.intervals[i] = *(intervals + i);
-  
-  setCycle(type, steps, colors, loop);  
+
+  setCycle(type, steps, colors, loop);
 }
 void CClyde::setCycle(ECycleType type, uint8_t steps, const RGB *colors, const uint32_t *intervals, ECycleLoop loop) {
   for(int i = 0; i < steps; i++)
     m_cycle.intervals[i] = *(intervals + i);
-  
-  setCycle(type, steps, colors, loop);  
+
+  setCycle(type, steps, colors, loop);
 }
 
 void CClyde::setCycle(ECycleType type, uint8_t steps, const RGB *colors, ECycleLoop loop) {
   m_cycle.type = type;
   m_cycle.numSteps = steps;
-  
+
   for(int i = 0; i < steps; i++)
     m_cycle.colors[i] = *(colors+i);
-  
+
   m_cycle.step = 0;
   m_cycle.stepStart = millis();
   m_cycle.stepEnd = m_cycle.stepStart + m_cycle.intervals[m_cycle.step];
   m_cycle.stepColor = RGB(m_ambient.color.r, m_ambient.color.g, m_ambient.color.b);
   m_cycle.loop = loop;
-} 
+}
 
 void CClyde::stopCycle() {  //TODO should this be a function pointer set when starting cycle
   switch(m_cycle.type) {
@@ -728,43 +731,43 @@ void CClyde::stopCycle() {  //TODO should this be a function pointer set when st
     default:
       //for any other cycle, turn it off
       setAmbient(RGB(0,0,0));  //XXX this should move outside
-      m_cycle.off();  
+      m_cycle.off();
       break;
-  }  
+  }
 }
 
-// just commented this out to save space...
-void CClyde::blink(const RGB& rgb, uint32_t onDuration, uint32_t offDuration, uint8_t numBlinks) {
-  //calculate number of steps needed in the cycle
-  uint8_t steps = numBlinks*2 + 1;
-  
-  //if numBlinks was zero (infinite loop), make space for on/off
-  if (steps == 1) steps = 2;
-  
-  //check number of step limit
-  if (steps > CAmbientCycle::MAX_CYCLE_LENGTH)
-    return;
-  
-  //set blinks color
-  RGB colors[steps];
-  uint32_t intervals[steps];
-  
-  for(int i = 0; i < steps; i++) {
-    if (i%2==1) {
-      colors[i] = rgb;
-      intervals[i] = offDuration;
-    }
-    else {
-      intervals[i] = onDuration;
-    }
-  }
-  
-  setCycle(BLINK, steps, &colors[0], &intervals[0], numBlinks==0?LOOP:NO_LOOP);
-}
+// // just commented this out to save space...
+// void CClyde::blink(const RGB& rgb, uint32_t onDuration, uint32_t offDuration, uint8_t numBlinks) {
+//   //calculate number of steps needed in the cycle
+//   uint8_t steps = numBlinks*2 + 1;
+
+//   //if numBlinks was zero (infinite loop), make space for on/off
+//   if (steps == 1) steps = 2;
+
+//   //check number of step limit
+//   if (steps > CAmbientCycle::MAX_CYCLE_LENGTH)
+//     return;
+
+//   //set blinks color
+//   RGB colors[steps];
+//   uint32_t intervals[steps];
+
+//   for(int i = 0; i < steps; i++) {
+//     if (i%2==1) {
+//       colors[i] = rgb;
+//       intervals[i] = offDuration;
+//     }
+//     else {
+//       intervals[i] = onDuration;
+//     }
+//   }
+
+//   setCycle(BLINK, steps, &colors[0], &intervals[0], numBlinks==0?LOOP:NO_LOOP);
+// }
 
 void CClyde::updateCycle() {
   uint32_t now = millis();
-  
+
   //if we reach the end of the current step
   if (now > m_cycle.stepEnd) {
     //process to next step
@@ -788,7 +791,7 @@ void CClyde::updateCycle() {
   newColor.g = m_cycle.stepColor.g + (t*diff);
   diff = m_cycle.colors[m_cycle.step].b - m_cycle.stepColor.b;
   newColor.b = m_cycle.stepColor.b + (t*diff);
-  
+
   setAmbient(newColor);
 }
 
@@ -817,7 +820,7 @@ void CClyde::updateCycleNextStep(uint32_t now) {
 
 void CClyde::setCycleStep(uint8_t step) {
   if (step >= m_cycle.numSteps) return;
-  
+
   m_cycle.step = step;
   m_cycle.stepStart = millis();
   m_cycle.stepEnd += m_cycle.intervals[m_cycle.step];
@@ -834,7 +837,7 @@ void CClyde::speedUpCycle(uint32_t factor) {
     m_cycle.intervals[i] /= factor;
     factor *= 2;
   }
-  
+
   //jump cycle to next color
   cycleNextStep(millis());
 }
